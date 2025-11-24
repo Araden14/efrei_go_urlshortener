@@ -11,6 +11,8 @@ import (
 	"github.com/axellelanca/urlshortener/internal/config"
 	"github.com/axellelanca/urlshortener/internal/monitor"
 	"github.com/spf13/cobra"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	// Driver SQLite pour GORM
 )
 
@@ -31,6 +33,11 @@ puis lance le serveur HTTP.`,
 		}
 
 		// TODO : Initialiser la connexion à la bBDD
+		dsn := cfg.Database.Name
+		db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("FATAL: Échec de la connexion à la base de données: %v", err)
+		}
 
 		// TODO : Initialiser les repositories.
 		// Créez des instances de GormLinkRepository et GormClickRepository.
