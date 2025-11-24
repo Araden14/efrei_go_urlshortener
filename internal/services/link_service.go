@@ -32,7 +32,6 @@ func NewLinkService(linkRepo repository.LinkRepository) *LinkService {
 	}
 }
 
-// TODO Créer la méthode GenerateShortCode
 // GenerateShortCode est une méthode rattachée à LinkService
 // Elle génère un code court aléatoire d'une longueur spécifiée. Elle prend une longueur en paramètre et retourne une string et une erreur
 // Il utilise le package 'crypto/rand' pour éviter la prévisibilité.
@@ -55,6 +54,7 @@ func (s *LinkService) CreateLink(longURL string) (*models.Link, error) {
 	// TODO 1: Implémenter la logique de retry pour générer un code court unique.
 	// Essayez de générer un code, vérifiez s'il existe déjà en base, et retentez si une collision est trouvée.
 	// Limitez le nombre de tentatives pour éviter une boucle infinie.
+	
 
 	// TODO Créer une variable shortcode pour stocker le shortcode créé
 
