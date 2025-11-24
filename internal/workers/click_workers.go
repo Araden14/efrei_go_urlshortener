@@ -32,9 +32,7 @@ func clickWorker(clickEventsChan <-chan models.ClickEvent, clickRepo repository.
 			// Si une erreur se produit lors de l'enregistrement, logguez-la.
 			// L'événement est "perdu" pour ce TP, mais dans un vrai système,
 			// vous pourriez le remettre dans une file de retry ou une file d'erreurs.
-			log.Printf("ERROR: Failed to save click for LinkID %d (UserAgent: %s, IP: %s): %v",
-				event.LinkID, event.UserAgent, event.IP, err)
-
+			log.Printf("ERROR: Failed to save click for LinkID %d (UserAgent: %s, IP: %s): %v", event.LinkID, event.UserAgent, event.IP, err)
 		} else {
 			log.Printf("Click recorded for LinkID %d", event.LinkID)
 		}
