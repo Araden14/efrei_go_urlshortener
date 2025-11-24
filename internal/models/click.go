@@ -1,9 +1,11 @@
 package models
 
-import "time"
+import (
+	"time"
+	"gorm.io/gorm"
+)
 
-// Click représente un événement de clic sur un lien raccourci.
-// GORM utilisera ces tags pour créer la table 'clicks'.
+// Click : Définition de ce qu'est un clic
 type Click struct {
 	ID        uint      `gorm:"primaryKey"`        // Clé primaire
 	LinkID    uint      `gorm:"index"`             // Clé étrangère vers la table 'links', indexée pour des requêtes efficaces

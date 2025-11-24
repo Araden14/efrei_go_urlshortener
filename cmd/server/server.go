@@ -16,9 +16,7 @@ import (
 	// Driver SQLite pour GORM
 )
 
-// RunServerCmd représente la commande 'run-server' de Cobra.
-// C'est le point d'entrée pour lancer le serveur de l'application.
-var RunServerCmd = &cobra.Command{
+var ServerCmd = &cobra.Command{
 	Use:   "run-server",
 	Short: "Lance le serveur API de raccourcissement d'URLs et les processus de fond.",
 	Long: `Cette commande initialise la base de données, configure les APIs,
@@ -71,36 +69,73 @@ puis lance le serveur HTTP.`,
 		// TODO : Configurer le routeur Gin et les handlers API.
 		// Passez les services nécessaires aux fonctions de configuration des routes.
 
-		// Pas toucher au log
-		log.Println("Routes API configurées.")
+		// 2. Base de données
+		db, err := gorm.Open(sqlite.Open(dbUrl), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("❌ Erreur DB: %v", err)
+		}
+		// Migration automatique (Création des tables si elles n'existent pas)
+		db.AutoMigrate(&models.Link{}, &models.Click{})
 
-		// Créer le serveur HTTP Gin
-		serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
+		// 3. Initialisation des composants
+		
+		// Repositories
+		linkRepo := repository.NewLinkRepository(db)
+		clickRepo := repository.NewClickRepository(db)
+
+		// Channel pour les workers (Tampon de 100 événements)
+		// C'est le tuyau entre l'API et les Workers
+		clickChan := make(chan models.ClickEvent, 100)
+
+		// Services
+		// Note : Il faudra peut-être adapter NewLinkService selon ce que ton collègue a écrit.
+		// J'assume ici qu'il prend le Repo + le Channel (ou juste le repo, à vérifier dans link_service.go)
+		// Pour l'instant, je laisse une version standard :
+		linkService := services.NewLinkService(linkRepo)
+		// SI ton service a besoin du channel pour envoyer les clics, il faudra modifier link_service.go
+
+		// Workers
+		// On lance 3 ouvriers pour gérer les clics en parallèle
+		workers.StartClickWorkers(3, clickChan, clickRepo)
+
+		// Monitor
+		// Vérifie toutes les 2 minutes
+		urlMonitor := monitor.NewUrlMonitor(linkRepo, 2*time.Minute)
+		go urlMonitor.Start() // On le lance dans une goroutine pour ne pas bloquer
+
+		// API Handlers
+		// On passe le service ET le channel au handler (pour qu'il puisse envoyer des événements)
+		apiHandler := api.NewHandler(linkService) 
+		// ⚠️ ATTENTION : Il faudra probablement modifier api/handlers.go pour qu'il accepte le channel 'clickChan'
+		// ou passer le channel au LinkService. C'est le point délicat de l'intégration.
+
+		// 4. Serveur Web
+		router := gin.Default()
+		apiHandler.RegisterRoutes(router)
+
 		srv := &http.Server{
-			Addr:    serverAddr,
+			Addr:    port,
 			Handler: router,
 		}
 
-		// TODO : Démarrer le serveur Gin dans une goroutine anonyme pour ne pas bloquer.
-		// Pensez à logger des ptites informations...
+		go func() {
+			fmt.Printf("🚀 Serveur démarré sur %s\n", port)
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("❌ Erreur serveur: %s\n", err)
+			}
+		}()
 
-		// Gére l'arrêt propre du serveur (graceful shutdown).
-		// TODO Créez un channel pour les signaux OS (SIGINT, SIGTERM), bufferisé à 1.
-		quit :=
-			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM) // Attendre Ctrl+C ou signal d'arrêt
-
-		// Bloquer jusqu'à ce qu'un signal d'arrêt soit reçu.
+		// 5. Arrêt propre
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		<-quit
-		log.Println("Signal d'arrêt reçu. Arrêt du serveur...")
 
-		// Arrêt propre du serveur HTTP avec un timeout.
-		log.Println("Arrêt en cours... Donnez un peu de temps aux workers pour finir.")
-		time.Sleep(5 * time.Second)
-
-		log.Println("Serveur arrêté proprement.")
+		fmt.Println("\n🛑 Arrêt en cours...")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Fatal("Arrêt forcé:", err)
+		}
+		fmt.Println("👋 Serveur éteint.")
 	},
-}
-
-func init() {
-	// TODO : ajouter la commande
 }

@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"time"
 
-	"gorm.io/gorm" // Nécessaire pour la gestion spécifique de gorm.ErrRecordNotFound
+	"gorm.io/gorm"
 
 	"github.com/axellelanca/urlshortener/internal/models"
-	"github.com/axellelanca/urlshortener/internal/repository" // Importe le package repository
+	"github.com/axellelanca/urlshortener/internal/repository"
 )
 
 // Définition du jeu de caractères pour la génération des codes courts.
@@ -60,59 +59,82 @@ func (s *LinkService) CreateLink(longURL string) (*models.Link, error) {
 
 	// TODO Définir un nombre maximum (5) de tentative pour trouver un code unique  (maxRetries)
 
+// CreateShortLink (Renommé pour correspondre à ton Handler)
+func (s *LinkService) CreateShortLink(longURL string) (*models.Link, error) {
+	var shortCode string
+	maxRetries := 5
+    // (La ligne "var err error" a disparu ici)
 
+	// 1. Boucle de retry pour garantir l'unicité
 	for i := 0; i < maxRetries; i++ {
-		// TODO : Génère un code de 6 caractères (GenerateShortCode)
-
-
-		// TODO : Vérifie si le code généré existe déjà en base de données (GetLinkbyShortCode)
-		// On ignore la première valeur
-
-		if err != nil {
-			// Si l'erreur est 'record not found' de GORM, cela signifie que le code est unique.
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				shortCode = code // Le code est unique, on peut l'utiliser
-				break            // Sort de la boucle de retry
-			}
-			// Si c'est une autre erreur de base de données, retourne l'erreur.
-			return nil, fmt.Errorf("database error checking short code uniqueness: %w", err)
+        // ...
+		// Génère un code de 6 caractères
+		code, errGen := GenerateShortCode(6)
+		if errGen != nil {
+			return nil, fmt.Errorf("erreur génération code: %v", errGen)
 		}
 
-		// Si aucune erreur (le code a été trouvé), cela signifie une collision.
-		log.Printf("Short code '%s' already exists, retrying generation (%d/%d)...", code, i+1, maxRetries)
-		// La boucle continuera pour générer un nouveau code.
+		// Vérifie si le code existe déjà
+		_, errRepo := s.linkRepo.GetLinkByShortCode(code)
+
+		if errRepo != nil {
+			// Si l'erreur est "Record Not Found", C'EST UNE BONNE NOUVELLE !
+			// Ça veut dire que le code est libre.
+			if errors.Is(errRepo, gorm.ErrRecordNotFound) {
+				shortCode = code
+				break // On sort de la boucle, on a trouvé notre code unique
+			}
+			// Vraie erreur de base de données
+			return nil, fmt.Errorf("erreur BDD: %w", errRepo)
+		}
+
+		// Si on arrive ici, c'est que errRepo == nil, donc le lien existe déjà (collision).
+		log.Printf("⚠️ Collision détectée pour %s, nouvelle tentative (%d/%d)...", code, i+1, maxRetries)
 	}
 
-	// TODO : Si après toutes les tentatives, aucun code unique n'a été trouvé... Errors.New
+	// Si après 5 essais on a toujours rien
+	if shortCode == "" {
+		return nil, errors.New("impossible de générer un code unique après plusieurs tentatives")
+	}
 
+	// 2. Création et sauvegarde
+	link := &models.Link{
+		LongURL:   longURL,
+		ShortCode: shortCode,
+		IsActive:  true,
+	}
 
-	// TODO Crée une nouvelle instance du modèle Link.
-	link :=
+	// Appel au repository pour sauvegarder
+	if err := s.linkRepo.CreateLink(link); err != nil {
+		return nil, err
+	}
 
-	// TODO Persiste le nouveau lien dans la base de données via le repository (CreateLink)
-
-
-	// TODO Retourne le lien créé
-
+	return link, nil
 }
 
-// GetLinkByShortCode récupère un lien via son code court.
-// Il délègue l'opération de recherche au repository.
+// GetLinkByShortCode délègue au repository.
 func (s *LinkService) GetLinkByShortCode(shortCode string) (*models.Link, error) {
-	// TODO : Récupérer un lien par son code court en utilisant s.linkRepo.GetLinkByShortCode.
-	// Retourner le lien trouvé ou une erreur si non trouvé/problème DB.
-
+	return s.linkRepo.GetLinkByShortCode(shortCode)
 }
 
-// GetLinkStats récupère les statistiques pour un lien donné (nombre total de clics).
-// Il interagit avec le LinkRepository pour obtenir le lien, puis avec le ClickRepository
+// GetClicksCount (Ajouté car ton Handler l'utilise)
+func (s *LinkService) GetClicksCount(linkID uint) (int, error) {
+	return s.linkRepo.CountClicksByLinkID(linkID)
+}
+
+// GetLinkStats combine les infos du lien et des clics (Bonus si besoin)
 func (s *LinkService) GetLinkStats(shortCode string) (*models.Link, int, error) {
-	// TODO : Récupérer le lien par son shortCode
+	// 1. Récupérer le lien
+	link, err := s.linkRepo.GetLinkByShortCode(shortCode)
+	if err != nil {
+		return nil, 0, err
+	}
 
+	// 2. Compter les clics
+	count, err := s.linkRepo.CountClicksByLinkID(link.ID)
+	if err != nil {
+		return nil, 0, err
+	}
 
-	// TODO 4: Compter le nombre de clics pour ce LinkID
-
-	// TODO : on retourne les 3 valeurs
-	return
+	return link, count, nil
 }
-

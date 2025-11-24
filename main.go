@@ -1,10 +1,14 @@
 package main
 
 import (
-	_ "github.com/axellelanca/urlshortener/cmd/cli"    // Importe le package 'cli' pour que ses init() soient exécutés
-	_ "github.com/axellelanca/urlshortener/cmd/server" // Importe le package 'server' pour que ses init() soient exécutés
+	"github.com/axellelanca/urlshortener/cmd"
+
+	// 👇 C'est ICI la clé !
+	// Le "_" dit à Go : "Charge ces dossiers pour exécuter leur fonction init(), même si je n'utilise pas leurs variables."
+	_ "github.com/axellelanca/urlshortener/cmd/cli"
+	_ "github.com/axellelanca/urlshortener/cmd/server"
 )
 
 func main() {
-	// TODO
+	cmd.Execute()
 }

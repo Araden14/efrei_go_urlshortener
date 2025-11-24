@@ -1,10 +1,8 @@
 package config
 
 import (
-	"fmt"
-	"log" // Pour logger les informations ou erreurs de chargement de config
-
-	"github.com/spf13/viper" // La bibliothèque pour la gestion de configuration
+	"log"
+	"github.com/spf13/viper"
 )
 
 // TODO Créer Config qui est la structure principale qui mappe l'intégralité de la configuration de l'application.
