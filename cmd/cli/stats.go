@@ -2,77 +2,36 @@ package cli
 
 import (
 	"fmt"
-	"log"
-	"os"
-
-	cmd2 "github.com/axellelanca/urlshortener/cmd"
-	"github.com/axellelanca/urlshortener/internal/repository"
-	"github.com/axellelanca/urlshortener/internal/services"
 	"github.com/spf13/cobra"
-
-	"gorm.io/driver/sqlite" // Driver SQLite pour GORM
-	"gorm.io/gorm"
+	
+	// 👇 On importe le paquet cmd pour accéder à RootCmd
+	"github.com/axellelanca/urlshortener/cmd" 
 )
 
-// TODO : variable shortCodeFlag qui stockera la valeur du flag --code
+var shortCode string // La variable pour stocker le code (ex: XYZ123)
 
-
-// StatsCmd représente la commande 'stats'
-var StatsCmd = &cobra.Command{
+// statsCmd représente la commande "stats"
+var statsCmd = &cobra.Command{
 	Use:   "stats",
-	Short: "Affiche les statistiques (nombre de clics) pour un lien court.",
-	Long: `Cette commande permet de récupérer et d'afficher le nombre total de clics
-pour une URL courte spécifique en utilisant son code.
-
-Exemple:
-  url-shortener stats --code="xyz123"`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO : Valider que le flag --code a été fourni.
-		// os.Exit(1) si erreur
-
-
-		// TODO : Charger la configuration chargée globalement via cmd.cfg
-
-
-		// TODO 3: Initialiser la connexion à la BDD.
-		// log.Fatalf si erreur
-
-
-
-		sqlDB, err := db.DB()
-		if err != nil {
-			log.Fatalf("FATAL: Échec de l'obtention de la base de données SQL sous-jacente: %v", err)
-		}
-
-
-		// TODO S'assurer que la connexion est fermée à la fin de l'exécution de la commande grâce à defer
-
-
-		// TODO : Initialiser les repositories et services nécessaires NewLinkRepository & NewLinkService
-		linkRepo :=
-		linkService :=
-
-		// TODO 5: Appeler GetLinkStats pour récupérer le lien et ses statistiques.
-		// Attention, la fonction retourne 3 valeurs
-		// Pour l'erreur, utilisez gorm.ErrRecordNotFound
-		// Si erreur, os.Exit(1)
-
-
-
-		fmt.Printf("Statistiques pour le code court: %s\n", link.ShortCode)
-		fmt.Printf("URL longue: %s\n", link.LongURL)
-		fmt.Printf("Total de clics: %d\n", totalClicks)
+	Short: "Affiche les statistiques d'un lien",
+	Long:  `Récupère et affiche le nombre de clics pour un code court donné.`,
+	Run: func(c *cobra.Command, args []string) {
+		fmt.Printf("📊 Récupération des statistiques pour le code : %s\n", shortCode)
+		
+		// TODO: Appeler le service (Poste 1) : service.GetStats(shortCode)
+		
+		// Simulation
+		fmt.Println("--- RÉSULTAT (Simulation) ---")
+		fmt.Println("URL d'origine : https://www.efrei.fr")
+		fmt.Println("Nombre de clics : 42")
 	},
 }
 
-// init() s'exécute automatiquement lors de l'importation du package.
-// Il est utilisé pour définir les flags que cette commande accepte.
 func init() {
-	// TODO : Définir le flag --code pour la commande stats.
+	// 1. Configuration du drapeau --code (ou -c)
+	statsCmd.Flags().StringVarP(&shortCode, "code", "c", "", "Le code court du lien (ex: XYZ123)")
+	statsCmd.MarkFlagRequired("code") // Obligatoire
 
-	// TODO Marquer le flag comme requis
-
-
-	// TODO : Ajouter la commande à RootCmd
-
+	// 2. Enregistrement auprès du Chef (RootCmd)
+	cmd.RootCmd.AddCommand(statsCmd)
 }

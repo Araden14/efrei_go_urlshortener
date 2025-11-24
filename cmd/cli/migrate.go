@@ -2,41 +2,30 @@ package cli
 
 import (
 	"fmt"
-	"log"
-
-	cmd2 "github.com/axellelanca/urlshortener/cmd"
-	"github.com/axellelanca/urlshortener/internal/models"
 	"github.com/spf13/cobra"
-	"gorm.io/driver/sqlite" // Driver SQLite pour GORM
-	"gorm.io/gorm"
+
+	// 👇 Toujours le même import vital
+	"github.com/axellelanca/urlshortener/cmd"
 )
 
-// MigrateCmd représente la commande 'migrate'
-var MigrateCmd = &cobra.Command{
+// migrateCmd représente la commande "migrate"
+var migrateCmd = &cobra.Command{
 	Use:   "migrate",
-	Short: "Exécute les migrations de la base de données pour créer ou mettre à jour les tables.",
-	Long: `Cette commande se connecte à la base de données configurée (SQLite)
-et exécute les migrations automatiques de GORM pour créer les tables 'links' et 'clicks'
-basées sur les modèles Go.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO : Charger la configuration chargée globalement via cmd.cfg
+	Short: "Initialise la base de données",
+	Long:  `Crée ou met à jour les tables (Links, Clicks) dans la base de données SQLite.`,
+	Run: func(c *cobra.Command, args []string) {
+		fmt.Println("🔄 Démarrage des migrations GORM...")
 
-		// TODO 2: Initialiser la connexion à la BDD
-
-		sqlDB, err := db.DB()
-		if err != nil {
-			log.Fatalf("FATAL: Échec de l'obtention de la base de données SQL sous-jacente: %v", err)
-		}
-		// TODO Assurez-vous que la connexion est fermée après la migration grâce à defer
-
-		// TODO 3: Exécuter les migrations automatiques de GORM.
-		// Utilisez db.AutoMigrate() et passez-lui les pointeurs vers tous vos modèles.
-
-		// Pas touche au log
-		fmt.Println("Migrations de la base de données exécutées avec succès.")
+		// TODO: Appeler le modèle (Poste 1) : models.InitDB() ou models.Migrate()
+		
+		// Simulation
+		fmt.Println("✅ Tables 'links' et 'clicks' créées ou mises à jour avec succès (Simulation).")
 	},
 }
 
 func init() {
-	// TODO : Ajouter la commande à RootCmd
+	// Pas de drapeau spécifique pour l'instant.
+	
+	// Enregistrement auprès du Chef (RootCmd)
+	cmd.RootCmd.AddCommand(migrateCmd)
 }
