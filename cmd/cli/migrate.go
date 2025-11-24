@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/axellelanca/urlshortener/cmd"
 	"github.com/axellelanca/urlshortener/internal/config"
 	"github.com/axellelanca/urlshortener/internal/models"
 	"github.com/spf13/cobra"
@@ -45,5 +46,5 @@ basées sur les modèles Go.`,
 }
 
 func init() {
-	// TODO : Ajouter la commande à RootCmd
+	cmd.RootCmd.AddCommand(MigrateCmd)
 }

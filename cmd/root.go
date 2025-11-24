@@ -13,7 +13,7 @@ import (
 var Cfg *config.Config
 
 // RootCmd représente la commande de base.
-// IMPORTANT : Elle commence par une Majuscule (RootCmd) pour être visible 
+// IMPORTANT : Elle commence par une Majuscule (RootCmd) pour être visible
 // depuis les autres fichiers (server.go, create.go, etc.) qui vont venir s'y accrocher.
 var RootCmd = &cobra.Command{
 	Use:   "url-shortener",
@@ -48,8 +48,8 @@ func init() {
 // initConfig charge la configuration de l'application.
 func initConfig() {
 	var err error
-	
-	// On essaie de charger la config. 
+
+	// On essaie de charger la config.
 	// Note: Assure-toi que la fonction LoadConfig existe bien dans internal/config/config.go
 	// et qu'elle ne demande pas d'arguments, ou adapte ici ("." par exemple).
 	Cfg, err = config.LoadConfig()

@@ -2,7 +2,6 @@ package models
 
 import (
 	"time"
-	"gorm.io/gorm"
 )
 
 // Click : Définition de ce qu'est un clic
