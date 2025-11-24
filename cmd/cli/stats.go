@@ -32,8 +32,14 @@ Exemple:
 			os.Exit(1);
 		}
 
+		//Charger la configuration
 		cfg, err := config.LoadConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
 		dsn := cfg.Database.Name
+
+		//Connexion à la base de données
         db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
         if err != nil {
             log.Fatalf("FATAL: Échec de l'obtention de la base de données SQL sous-jacente: %v", err)
