@@ -7,33 +7,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-<<<<<<< HEAD
-// Config est la structure qui va stocker notre "menu" (les paramètres)
-// C'est comme un bon de commande vide qu'on va remplir.
-type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Monitor  MonitorConfig
-}
-
-type ServerConfig struct {
-	Port string // Stocke le port (ex: "8080")
-}
-
-type DatabaseConfig struct {
-	FilePath string // Stocke le chemin du fichier DB
-}
-
-type MonitorConfig struct {
-	IntervalSeconds int // Stocke le temps entre deux vérifications
-}
-
-// LoadConfig lit le fichier config.yaml et remplit la structure Config
-func LoadConfig() (*Config, error) {
-	// On dit à Viper : "Le fichier s'appelle config"
-	viper.SetConfigName("config")
-	// On dit à Viper : "C'est un fichier de type yaml"
-=======
 // TODO Créer Config qui est la structure principale qui mappe l'intégralité de la configuration de l'application.
 // Les tags `mapstructure` sont utilisés par Viper pour mapper les clés du fichier de config
 // (ou des variables d'environnement) aux champs de la structure Go.
@@ -75,31 +48,12 @@ func LoadConfig() (*Config, error) {
 	viper.SetConfigName("config")
 
 	// TODO Spécifie le type de fichier de config.
->>>>>>> 5d29de010357adbcdff544f4fddfd5696548fbc1
 	viper.SetConfigType("yaml")
 	// On dit à Viper : "Cherche ce fichier dans le dossier configs/"
 	viper.AddConfigPath("./configs")
 	// On ajoute aussi le dossier courant au cas où (.)
 	viper.AddConfigPath(".")
 
-<<<<<<< HEAD
-	// On essaie de lire le fichier
-	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("Erreur lors de la lecture du fichier de config : %v", err)
-		return nil, err
-	}
-
-	// On crée une variable vide 'cfg'
-	var cfg Config
-	// On demande à Viper de verser les infos du fichier dans notre variable 'cfg'
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, err
-	}
-
-	// On retourne la configuration prête à l'emploi !
-	return &cfg, nil
-}
-=======
 	// TODO : Définir les valeurs par défaut pour toutes les options de configuration.
 	// Ces valeurs seront utilisées si les clés correspondantes ne sont pas trouvées dans le fichier de config
 	// ou si le fichier n'existe pas.
@@ -130,4 +84,3 @@ func LoadConfig() (*Config, error) {
 
 	return &cfg, nil // Retourne la configuration chargée
 }
->>>>>>> 5d29de010357adbcdff544f4fddfd5696548fbc1
