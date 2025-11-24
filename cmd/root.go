@@ -45,6 +45,7 @@ func initConfig() {
 	// Note: Assure-toi que la fonction LoadConfig existe bien dans internal/config/config.go
 	// et qu'elle ne demande pas d'arguments, ou adapte ici ("." par exemple).
 	Cfg, err = config.LoadConfig()
+	
 	if err != nil {
 		// On loggue juste l'avertissement comme demandé
 		log.Printf("Attention: Problème lors du chargement de la configuration: %v. Utilisation des valeurs par défaut.", err)
