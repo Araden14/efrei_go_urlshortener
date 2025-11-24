@@ -2,28 +2,48 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
+	"log"
 
-	// 👇 Toujours le même import vital
-	"github.com/axellelanca/urlshortener/cmd"
+	"github.com/axellelanca/urlshortener/internal/config"
+	"github.com/axellelanca/urlshortener/internal/models"
+	"github.com/spf13/cobra"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	// Driver SQLite pour GORM
 )
 
-// migrateCmd représente la commande "migrate"
-var migrateCmd = &cobra.Command{
+// MigrateCmd représente la commande 'migrate'
+var MigrateCmd = &cobra.Command{
 	Use:   "migrate",
-	Short: "Initialise la base de données",
-	Long:  `Crée ou met à jour les tables (Links, Clicks) dans la base de données SQLite.`,
-	Run: func(c *cobra.Command, args []string) {
-		fmt.Println("🔄 Démarrage des migrations GORM...")
-
-		// TODO: Appeler le modèle (Poste 1) : models.InitDB() ou models.Migrate()
-		
-		// Simulation
-		fmt.Println("✅ Tables 'links' et 'clicks' créées ou mises à jour avec succès (Simulation).")
+	Short: "Exécute les migrations de la base de données pour créer ou mettre à jour les tables.",
+	Long: `Cette commande se connecte à la base de données configurée (SQLite)
+et exécute les migrations automatiques de GORM pour créer les tables 'links' et 'clicks'
+basées sur les modèles Go.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			log.Fatalf("FATAL: Échec du chargement de la configuration: %v", err)
+		}
+		dsn := cfg.Database.Name
+		db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("FATAL: Échec de l'obtention de la base de données SQL sous-jacente: %v", err)
+		}
+		sqlDB, err := db.DB()
+		if err != nil {
+			log.Fatalf("FATAL: Échec de l'obtention de la base de données SQL sous-jacente: %v", err)
+		}
+		defer sqlDB.Close()
+		// Utilisez db.AutoMigrate() et passez-lui les pointeurs vers tous vos modèles.
+		err = db.AutoMigrate(&models.Link{}, &models.Click{})
+		if err != nil {
+			log.Fatalf("FATAL: Échec de la migration de la base de données: %v", err)
+		}
+		// Pas touche au log
+		fmt.Println("Migrations de la base de données exécutées avec succès.")
 	},
 }
 
 func init() {
-
-	cmd.RootCmd.AddCommand(migrateCmd)
+	// TODO : Ajouter la commande à RootCmd
 }

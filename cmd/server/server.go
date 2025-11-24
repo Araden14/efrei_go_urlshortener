@@ -1,40 +1,73 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/spf13/cobra"
-
-	"github.com/axellelanca/urlshortener/cmd"
-	"github.com/axellelanca/urlshortener/internal/api"
-	"github.com/axellelanca/urlshortener/internal/models"
+	"github.com/axellelanca/urlshortener/internal/config"
 	"github.com/axellelanca/urlshortener/internal/monitor"
-	"github.com/axellelanca/urlshortener/internal/repository"
-	"github.com/axellelanca/urlshortener/internal/services"
-	"github.com/axellelanca/urlshortener/internal/workers"
+	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	// Driver SQLite pour GORM
 )
 
 var ServerCmd = &cobra.Command{
 	Use:   "run-server",
-	Short: "Lance le serveur API et les workers",
-	Run: func(c *cobra.Command, args []string) {
-		// 1. Config
-		port := ":8080"
-		dbUrl := "url_shortener.db"
-		if cmd.Cfg != nil {
-			port = cmd.Cfg.ServerPort
-			dbUrl = cmd.Cfg.DBUrl
+	Short: "Lance le serveur API de raccourcissement d'URLs et les processus de fond.",
+	Long: `Cette commande initialise la base de données, configure les APIs,
+démarre les workers asynchrones pour les clics et le moniteur d'URLs,
+puis lance le serveur HTTP.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// TODO : créer une variable qui stock la configuration chargée globalement via cmd.cfg
+		// Ne pas oublier la gestion d'erreur et faire un fatalF
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			log.Fatalf("FATAL: Échec du chargement de la configuration: %v", err)
 		}
+
+		// TODO : Initialiser la connexion à la bBDD
+		dsn := cfg.Database.Name
+		db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("FATAL: Échec de la connexion à la base de données: %v", err)
+		}
+
+		// TODO : Initialiser les repositories.
+		// Créez des instances de GormLinkRepository et GormClickRepository.
+
+		// Laissez le log
+		log.Println("Repositories initialisés.")
+
+		// TODO : Initialiser les services métiers.
+		// Créez des instances de LinkService et ClickService, en leur passant les repositories nécessaires.
+
+		// Laissez le log
+		log.Println("Services métiers initialisés.")
+
+		// TODO : Initialiser le channel ClickEventsChannel (api/handlers) des événements de clic et lancer les workers (StartClickWorkers).
+		// Le channel est bufferisé avec la taille configurée.
+		// Passez le channel et le clickRepo aux workers.
+
+		// TODO : Remplacer les XXX par les bonnes variables
+		log.Printf("Channel d'événements de clic initialisé avec un buffer de %d. %d worker(s) de clics démarré(s).",
+			XXX, XXX)
+
+		// TODO : Initialiser et lancer le moniteur d'URLs.
+		// Utilisez l'intervalle configuré
+		monitorInterval := time.Duration(XXX) * time.Minute
+		urlMonitor := monitor.NewUrlMonitor() // Le moniteur a besoin du linkRepo et de l'interval
+
+		// TODO Lancez le moniteur dans sa propre goroutine.
+
+		log.Printf("Moniteur d'URLs démarré avec un intervalle de %v.", monitorInterval)
+
+		// TODO : Configurer le routeur Gin et les handlers API.
+		// Passez les services nécessaires aux fonctions de configuration des routes.
 
 		// 2. Base de données
 		db, err := gorm.Open(sqlite.Open(dbUrl), &gorm.Config{})

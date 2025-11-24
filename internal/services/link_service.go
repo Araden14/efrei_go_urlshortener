@@ -16,11 +16,13 @@ import (
 // Définition du jeu de caractères pour la génération des codes courts.
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-// LinkService gère la logique métier des liens.
+// LinkService est une structure qui g fournit des méthodes pour la logique métier des liens.
+// Elle détient linkRepo qui est une référence vers une interface LinkRepository.
+// IMPORTANT : Le champ doit être du type de l'interface (non-pointeur).
 type LinkService struct {
-	// Attention à la majuscule ici pour correspondre au NewLinkService
-	linkRepo repository.LinkRepository
+	LinkRepo repository.LinkRepository
 }
+
 
 // NewLinkService crée et retourne une nouvelle instance de LinkService.
 func NewLinkService(linkRepo repository.LinkRepository) *LinkService {
@@ -29,23 +31,33 @@ func NewLinkService(linkRepo repository.LinkRepository) *LinkService {
 	}
 }
 
-// GenerateShortCode génère un code aléatoire sécurisé.
+// GenerateShortCode est une méthode rattachée à LinkService
+// Elle génère un code court aléatoire d'une longueur spécifiée. Elle prend une longueur en paramètre et retourne une string et une erreur
+// Il utilise le package 'crypto/rand' pour éviter la prévisibilité.
+// Je vous laisse chercher un peu :) C'est faisable en une petite dizaine de ligne
 func GenerateShortCode(length int) (string, error) {
-	// On crée un tableau de bytes de la bonne longueur
-	b := make([]byte, length)
-	
-	// Pour chaque case, on tire un caractère au hasard
-	for i := range b {
-		// rand.Int retourne un nombre sécurisé entre 0 et len(charset)
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		if err != nil {
-			return "", err
-		}
-		// On prend le caractère correspondant à l'index tiré
-		b[i] = charset[num.Int64()]
+	chars := rand.Text()
+	runes := []rune(chars)
+	if len(runes) <= length {
+		return chars, nil
 	}
-	return string(b), nil
+	shortcode := string(runes[:length])
+	return shortcode, nil
 }
+
+
+
+// CreateLink crée un nouveau lien raccourci.
+// Il génère un code court unique, puis persiste le lien dans la base de données.
+func (s *LinkService) CreateLink(longURL string) (*models.Link, error) {
+	// TODO 1: Implémenter la logique de retry pour générer un code court unique.
+	// Essayez de générer un code, vérifiez s'il existe déjà en base, et retentez si une collision est trouvée.
+	// Limitez le nombre de tentatives pour éviter une boucle infinie.
+	
+
+	// TODO Créer une variable shortcode pour stocker le shortcode créé
+
+	// TODO Définir un nombre maximum (5) de tentative pour trouver un code unique  (maxRetries)
 
 // CreateShortLink (Renommé pour correspondre à ton Handler)
 func (s *LinkService) CreateShortLink(longURL string) (*models.Link, error) {
