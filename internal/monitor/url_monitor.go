@@ -11,19 +11,20 @@ import (
 
 // UrlMonitor gère la surveillance périodique des URLs longues.
 type UrlMonitor struct {
-	linkRepo    repository.LinkRepository // On utilise l'interface, c'est plus propre
-	interval    time.Duration
-	knownStates map[uint]bool
-	mu          sync.Mutex
+	linkRepo    repository.GormLinkRepository // Pour récupérer les URLs à surveiller
+	interval    time.Duration             // Intervalle entre chaque vérification (ex: 5 minutes)
+	knownStates map[uint]bool             // État connu de chaque URL: map[LinkID]estAccessible (true/false)
+	mu          sync.Mutex                // Mutex pour protéger l'accès concurrentiel à knownStates
 }
 
 // NewUrlMonitor crée et retourne une nouvelle instance de UrlMonitor.
-func NewUrlMonitor(linkRepo repository.LinkRepository, interval time.Duration) *UrlMonitor {
-	return &UrlMonitor{
-		linkRepo:    linkRepo,
-		interval:    interval,
+func NewUrlMonitor(linkRepo repository.GormLinkRepository, interval time.Duration) *UrlMonitor {
+	pUrlMonitor := &UrlMonitor{
+		linkRepo: linkRepo,
+		interval: interval,
 		knownStates: make(map[uint]bool),
 	}
+	return pUrlMonitor;
 }
 
 // Start lance la boucle de surveillance.
@@ -44,14 +45,15 @@ func (m *UrlMonitor) Start() {
 func (m *UrlMonitor) checkUrls() {
 	log.Println("[MONITOR] Vérification des URLs en cours...")
 
-	links, err := m.linkRepo.GetAllLinks()
-	if err != nil {
-		log.Printf("[MONITOR] ERREUR récupération liens : %v", err)
-		return
+	// Gérer l'erreur si la récupération échoue.
+	// Si erreur : log.Printf("[MONITOR] ERREUR lors de la récupération des liens pour la surveillance : %v", err)
+	links, err := m.linkRepo.GetAllLinks();
+	if (err != nil) {
+		log.Printf("[MONITOR] ERREUR lors de la récupération des liens pour la surveillance : %v", err)
 	}
 
 	for _, link := range links {
-		currentState := m.isUrlAccessible(link.LongURL)
+		currentState := m.isUrlAccessible(link.LongURL);
 
 		m.mu.Lock()
 		previousState, exists := m.knownStates[link.ID]
@@ -59,27 +61,34 @@ func (m *UrlMonitor) checkUrls() {
 		m.mu.Unlock()
 
 		if !exists {
-			// Première fois qu'on voit ce lien
+			log.Printf("[MONITOR] État initial pour le lien %s (%s) : %s",
+				link.Shortcode, link.LongURL, formatState(currentState))
 			continue
 		}
 
-		if previousState != currentState {
-			// Notification de changement d'état
-			log.Printf("[NOTIFICATION] Le lien %s (%s) est passé de %s à %s !",
-				link.LongURL, link.ShortCode, formatState(previousState), formatState(currentState))
+		// Si l'état a changé, générer une fausse notification dans les logs.
+		if (previousState != currentState) {
+			log.Printf("[NOTIFICATION] Le lien %s (%s) est passé de %s à %s !", link.LongURL, link.Shortcode, previousState, currentState);
 		}
+
 	}
 }
 
 func (m *UrlMonitor) isUrlAccessible(url string) bool {
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Head(url)
-	if err != nil {
-		// log.Printf("[MONITOR] Erreur accès '%s': %v", url, err) // Optionnel pour ne pas polluer les logs
-		return false
+	client := &http.Client{
+		Timeout: 5 * time.Second,
 	}
+
+	// Un code de statut 2xx ou 3xx indique que l'URL est accessible.
+	resp, err := client.Head(url)
+	if (err != nil) {
+		log.Printf("[MONITOR] Erreur d'accès à l'URL '%s': %v", url, err)
+	}
+
 	defer resp.Body.Close()
-	return resp.StatusCode >= 200 && resp.StatusCode < 400
+
+	// Déterminer l'accessibilité basée sur le code de statut HTTP.
+	return resp.StatusCode >= 200 && resp.StatusCode < 400 // Codes 2xx ou 3xx
 }
 
 func formatState(accessible bool) string {

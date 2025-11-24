@@ -1,14 +1,12 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
+import "time"
 
-// Link : Définition de ce qu'est un lien
+// Link représente un lien raccourci dans la base de données.
+// Les tags `gorm:"..."` définissent comment GORM doit mapper cette structure à une table SQL.
 type Link struct {
-	gorm.Model
-	ShortCode  string `gorm:"uniqueIndex;not null" json:"short_code"`
-	LongURL    string `gorm:"not null" json:"long_url"`
-	ClickCount int64  `gorm:"default:0" json:"click_count"`
-	IsActive   bool   `gorm:"default:true" json:"is_active"`
+	ID        uint      `gorm:"primaryKey"`                   // Clé primaire
+	Shortcode string    `gorm:"uniqueIndex;size:10;not null"` // Code court unique, indexé, taille max 10 caractères
+	LongURL   string    `gorm:"not null"`                     // URL originale, ne peut pas être null
+	CreatedAt time.Time `gorm:"autoCreateTime"`               // Horodatage de la création du lien
 }
