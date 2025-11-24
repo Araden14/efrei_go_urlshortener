@@ -2,10 +2,11 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
-	
+
 	// 👇 C'est l'import crucial qui permet de voir "RootCmd"
-	"github.com/axellelanca/urlshortener/cmd" 
+	"github.com/axellelanca/urlshortener/cmd"
 )
 
 var urlToShorten string
@@ -23,7 +24,7 @@ var createCmd = &cobra.Command{
 		}
 
 		fmt.Printf("📝 Création du lien pour : %s\n", urlToShorten)
-		
+
 		// TODO: Appeler le service (Poste 1) plus tard
 		fmt.Println("✅ Code généré : XYZ123 (Simulation)")
 	},

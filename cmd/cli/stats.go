@@ -2,10 +2,11 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
-	
+
 	// 👇 On importe le paquet cmd pour accéder à RootCmd
-	"github.com/axellelanca/urlshortener/cmd" 
+	"github.com/axellelanca/urlshortener/cmd"
 )
 
 var shortCode string // La variable pour stocker le code (ex: XYZ123)
@@ -17,9 +18,9 @@ var statsCmd = &cobra.Command{
 	Long:  `Récupère et affiche le nombre de clics pour un code court donné.`,
 	Run: func(c *cobra.Command, args []string) {
 		fmt.Printf("📊 Récupération des statistiques pour le code : %s\n", shortCode)
-		
+
 		// TODO: Appeler le service (Poste 1) : service.GetStats(shortCode)
-		
+
 		// Simulation
 		fmt.Println("--- RÉSULTAT (Simulation) ---")
 		fmt.Println("URL d'origine : https://www.efrei.fr")
@@ -29,6 +30,6 @@ var statsCmd = &cobra.Command{
 
 func init() {
 	statsCmd.Flags().StringVarP(&shortCode, "code", "c", "", "Le code court du lien (ex: XYZ123)")
-	statsCmd.MarkFlagRequired("code") 
+	statsCmd.MarkFlagRequired("code")
 	cmd.RootCmd.AddCommand(statsCmd)
 }
