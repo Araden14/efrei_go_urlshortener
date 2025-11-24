@@ -12,27 +12,27 @@ import (
 // (ou des variables d'environnement) aux champs de la structure Go.
 
 type Server struct {
-	Port    int
-	BaseURL string
+	Port    int    `mapstructure:"port"`
+	BaseURL string `mapstructure:"base_url"`
 }
 
 type Database struct {
-	Name string
+	Name string `mapstructure:"name"`
 }
 
 type Analytics struct {
-	BufferSize  int
-	WorkerCount int
+	BufferSize  int `mapstructure:"buffer_size"`
+	WorkerCount int `mapstructure:"worker_count"`
 }
 
 type Monitor struct {
 	IntervalMinutes int `mapstructure:"interval_minutes"`
 }
 type Config struct {
-	Server
-	Database
-	Analytics
-	Monitor
+	Server    Server    `mapstructure:"server"`
+	Database  Database  `mapstructure:"database"`
+	Analytics Analytics `mapstructure:"analytics"`
+	Monitor   Monitor   `mapstructure:"monitor"`
 }
 
 // LoadConfig charge la configuration de l'application en utilisant Viper.

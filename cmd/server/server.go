@@ -63,6 +63,7 @@ puis lance le serveur HTTP.`,
 		// Le channel est bufferisé avec la taille configurée.
 		// Passez le channel et le clickRepo aux workers.
 		clickChan := make(chan models.ClickEvent, cfg.Analytics.BufferSize)
+		api.ClickEventsChannel = clickChan // Assigner le channel au global pour que les handlers puissent l'utiliser
 		workers.StartClickWorkers(cfg.Analytics.WorkerCount, clickChan, clickRepo)
 
 		// TODO : Remplacer les XXX par les bonnes variables

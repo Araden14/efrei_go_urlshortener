@@ -43,14 +43,6 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 
 // SetupRoutes configure toutes les routes de l'API Gin et injecte les dépendances nécessaires
 func SetupRoutes(router *gin.Engine, linkService *services.LinkService) {
-	// Le channel est initialisé ici.
-	if ClickEventsChannel == nil {
-		// Créer le channel ici (make), il doit être bufférisé
-		// La taille du buffer doit être configurable via la donnée récupérée avec Viper
-		bufferSize := viper.GetInt("analytics.buffer_size")
-		ClickEventsChannel = make(chan models.ClickEvent, bufferSize)
-	}
-
 	// Route de Health Check, /health
 	router.GET("/health", HealthCheckHandler)
 
@@ -114,7 +106,6 @@ func RedirectHandler(linkService *services.LinkService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Récupère le shortCode de l'URL avec c.Param
 		shortCode := c.Param("shortCode")
-
 		// Récupérer l'URL longue associée au shortCode depuis le linkService (GetLinkByShortCode)
 		link, err := linkService.GetLinkByShortCode(shortCode)
 		if err != nil {
