@@ -13,9 +13,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 
-	// 👇 On importe tous tes dossiers
 	"github.com/axellelanca/urlshortener/cmd"
 	"github.com/axellelanca/urlshortener/internal/api"
+	"github.com/axellelanca/urlshortener/internal/models"
 	"github.com/axellelanca/urlshortener/internal/monitor"
 	"github.com/axellelanca/urlshortener/internal/repository"
 	"github.com/axellelanca/urlshortener/internal/services"
@@ -24,82 +24,85 @@ import (
 	"gorm.io/gorm"
 )
 
-// ServerCmd : La commande qui lance tout
 var ServerCmd = &cobra.Command{
 	Use:   "run-server",
 	Short: "Lance le serveur API et les workers",
 	Run: func(c *cobra.Command, args []string) {
-		// 1. Chargement de la config (depuis root.go)
-		// Si cmd.Cfg est nil, on utilise des valeurs par défaut pour éviter le crash
+		// 1. Config
 		port := ":8080"
 		dbUrl := "url_shortener.db"
-		
 		if cmd.Cfg != nil {
 			port = cmd.Cfg.ServerPort
 			dbUrl = cmd.Cfg.DBUrl
 		}
 
-		fmt.Printf("🚀 Démarrage du serveur sur le port %s...\n", port)
-
-		// 2. Connexion Base de Données (SQLite)
+		// 2. Base de données
 		db, err := gorm.Open(sqlite.Open(dbUrl), &gorm.Config{})
 		if err != nil {
-			log.Fatalf("❌ Impossible de se connecter à la BDD: %v", err)
+			log.Fatalf("❌ Erreur DB: %v", err)
 		}
+		// Migration automatique (Création des tables si elles n'existent pas)
+		db.AutoMigrate(&models.Link{}, &models.Click{})
 
-		// 3. Initialisation des couches (La "Mise en place")
+		// 3. Initialisation des composants
 		
-		// Repositories (Cuisine)
+		// Repositories
 		linkRepo := repository.NewLinkRepository(db)
 		clickRepo := repository.NewClickRepository(db)
 
-		// Services (Chefs de partie)
-		// On passe nil pour clickRepo dans LinkService pour l'instant si ton NewLinkService ne prend qu'un argument.
-		// Adapte selon ton fichier link_service.go
-		linkService := services.NewLinkService(linkRepo, clickRepo) 
-		
-		// Handlers (Serveurs)
-		apiHandler := api.NewHandler(linkService)
+		// Channel pour les workers (Tampon de 100 événements)
+		// C'est le tuyau entre l'API et les Workers
+		clickChan := make(chan models.ClickEvent, 100)
 
-		// Worker (Plongeur)
-		clickWorker := workers.NewClickWorker()
-		clickWorker.Start()
+		// Services
+		// Note : Il faudra peut-être adapter NewLinkService selon ce que ton collègue a écrit.
+		// J'assume ici qu'il prend le Repo + le Channel (ou juste le repo, à vérifier dans link_service.go)
+		// Pour l'instant, je laisse une version standard :
+		linkService := services.NewLinkService(linkRepo)
+		// SI ton service a besoin du channel pour envoyer les clics, il faudra modifier link_service.go
 
-		// Monitor (Inspecteur)
-		urlMonitor := monitor.NewURLMonitor(linkService) // Attention à la majuscule URL
-		urlMonitor.Start()
+		// Workers
+		// On lance 3 ouvriers pour gérer les clics en parallèle
+		workers.StartClickWorkers(3, clickChan, clickRepo)
 
-		// 4. Configuration du serveur Web (Gin)
+		// Monitor
+		// Vérifie toutes les 2 minutes
+		urlMonitor := monitor.NewUrlMonitor(linkRepo, 2*time.Minute)
+		go urlMonitor.Start() // On le lance dans une goroutine pour ne pas bloquer
+
+		// API Handlers
+		// On passe le service ET le channel au handler (pour qu'il puisse envoyer des événements)
+		apiHandler := api.NewHandler(linkService) 
+		// ⚠️ ATTENTION : Il faudra probablement modifier api/handlers.go pour qu'il accepte le channel 'clickChan'
+		// ou passer le channel au LinkService. C'est le point délicat de l'intégration.
+
+		// 4. Serveur Web
 		router := gin.Default()
 		apiHandler.RegisterRoutes(router)
 
-		// 5. Lancement du serveur (avec arrêt propre)
 		srv := &http.Server{
 			Addr:    port,
 			Handler: router,
 		}
 
-		// On lance le serveur dans un "thread" à part (goroutine)
 		go func() {
+			fmt.Printf("🚀 Serveur démarré sur %s\n", port)
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("❌ Erreur serveur: %s\n", err)
 			}
 		}()
 
-		// 6. Attente du signal d'arrêt (Ctrl+C)
+		// 5. Arrêt propre
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-		<-quit // On bloque ici tant qu'on n'a pas appuyé sur Ctrl+C
-		
-		fmt.Println("\n🛑 Arrêt du serveur en cours...")
-		
-		// On laisse 5 secondes au serveur pour finir les requêtes en cours
+		<-quit
+
+		fmt.Println("\n🛑 Arrêt en cours...")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
-			log.Fatal("Arrêt forcé du serveur:", err)
+			log.Fatal("Arrêt forcé:", err)
 		}
-
-		fmt.Println("👋 Serveur arrêté proprement.")
+		fmt.Println("👋 Serveur éteint.")
 	},
 }
