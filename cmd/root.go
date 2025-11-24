@@ -3,11 +3,17 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"github.com/Araden14/efrei_go_urlshortener/cmd/cli" // Assure-toi que le chemin d'import est bon !
+
+	"github.com/axellelanca/urlshortener/internal/config"
 	"github.com/spf13/cobra"
 )
 
-// RootCmd est la commande de base (quand on tape juste ./url-shortener)
+// Cfg est la variable globale qui contiendra la configuration chargée.
+var Cfg *config.Config
+
+// RootCmd représente la commande de base.
+// IMPORTANT : Elle commence par une Majuscule (RootCmd) pour être visible
+// depuis les autres fichiers (server.go, create.go, etc.) qui vont venir s'y accrocher.
 var RootCmd = &cobra.Command{
 	Use:   "url-shortener",
 	Short: "Un raccourcisseur d'URL en Go",
@@ -23,6 +29,7 @@ func Execute() {
 }
 
 func init() {
+<<<<<<< HEAD
 	// C'est ICI que tu ajoutes tes "assiettes" au menu principal
 	// Tu importes les commandes que tu as créées dans le dossier 'cli'
 	
@@ -33,3 +40,26 @@ func init() {
 	// RootCmd.AddCommand(cli.MigrateCmd)
 	// RootCmd.AddCommand(server.ServerCmd)
 }
+=======
+	// On demande à Cobra d'initialiser la config avant toute commande
+	cobra.OnInitialize(initConfig)
+
+	// Comme indiqué dans tes commentaires :
+	// On n'ajoute PAS les commandes ici (pas de AddCommand).
+	// Ce sont les sous-fichiers qui feront : cmd.RootCmd.AddCommand(...)
+}
+
+// initConfig charge la configuration de l'application.
+func initConfig() {
+	var err error
+
+	// On essaie de charger la config.
+	// Note: Assure-toi que la fonction LoadConfig existe bien dans internal/config/config.go
+	// et qu'elle ne demande pas d'arguments, ou adapte ici ("." par exemple).
+	Cfg, err = config.LoadConfig()
+	if err != nil {
+		// On loggue juste l'avertissement comme demandé
+		log.Printf("Attention: Problème lors du chargement de la configuration: %v. Utilisation des valeurs par défaut.", err)
+	}
+}
+>>>>>>> 10864de4e4a3329be90cf8a8855ea6e7c68ec234

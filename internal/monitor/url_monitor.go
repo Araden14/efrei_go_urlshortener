@@ -46,10 +46,10 @@ func (m *UrlMonitor) checkUrls() {
 	log.Println("[MONITOR] Vérification des URLs en cours...")
 
 	// Gérer l'erreur si la récupération échoue.
-	// Si erreur : log.Printf("[MONITOR] ERREUR lors de la récupération des liens pour la surveillance : %v", err)
 	links, err := m.linkRepo.GetAllLinks();
 	if (err != nil) {
 		log.Printf("[MONITOR] ERREUR lors de la récupération des liens pour la surveillance : %v", err)
+		return
 	}
 
 	for _, link := range links {
@@ -68,7 +68,7 @@ func (m *UrlMonitor) checkUrls() {
 
 		// Si l'état a changé, générer une fausse notification dans les logs.
 		if (previousState != currentState) {
-			log.Printf("[NOTIFICATION] Le lien %s (%s) est passé de %s à %s !", link.LongURL, link.Shortcode, previousState, currentState);
+			log.Printf("[NOTIFICATION] Le lien %s (%s) est passé de %s à %s !", link.LongURL, link.Shortcode, formatState(previousState), formatState(currentState));
 		}
 
 	}

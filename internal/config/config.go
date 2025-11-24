@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/spf13/viper"
@@ -52,7 +53,7 @@ type Analytics struct {
 }
 
 type Monitor struct {
-	IntervalMinutes int
+	IntervalMinutes int `mapstructure:"interval_minutes"`
 }
 type Config struct {
 	Server
@@ -67,11 +68,11 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	// TODO Spécifie le chemin où Viper doit chercher les fichiers de config.
 	// on cherche dans le dossier 'configs' relatif au répertoire d'exécution.
-	var path string = "../configs/"
+	var path string = "./configs/"
 	viper.AddConfigPath(path)
 
 	// TODO Spécifie le nom du fichier de config (sans l'extension).
-	viper.SetConfigFile("config")
+	viper.SetConfigName("config")
 
 	// TODO Spécifie le type de fichier de config.
 >>>>>>> 5d29de010357adbcdff544f4fddfd5696548fbc1
