@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/axellelanca/urlshortener/cmd"
 	"github.com/axellelanca/urlshortener/internal/api"
 	"github.com/axellelanca/urlshortener/internal/config"
 	"github.com/axellelanca/urlshortener/internal/models"
@@ -111,4 +112,8 @@ puis lance le serveur HTTP.`,
 		}
 		fmt.Println("👋 Serveur éteint.")
 	},
+}
+
+func init() {
+	cmd.RootCmd.AddCommand(ServerCmd)
 }
