@@ -29,18 +29,6 @@ func Execute() {
 }
 
 func init() {
-<<<<<<< HEAD
-	// C'est ICI que tu ajoutes tes "assiettes" au menu principal
-	// Tu importes les commandes que tu as créées dans le dossier 'cli'
-	
-	RootCmd.AddCommand(cli.CreateCmd) // Ajoute la commande 'create'
-	RootCmd.AddCommand(cli.StatsCmd)  // Ajoute la commande 'stats'
-	
-	// Plus tard, tu ajouteras :
-	// RootCmd.AddCommand(cli.MigrateCmd)
-	// RootCmd.AddCommand(server.ServerCmd)
-}
-=======
 	// On demande à Cobra d'initialiser la config avant toute commande
 	cobra.OnInitialize(initConfig)
 
@@ -62,4 +50,3 @@ func initConfig() {
 		log.Printf("Attention: Problème lors du chargement de la configuration: %v. Utilisation des valeurs par défaut.", err)
 	}
 }
->>>>>>> 10864de4e4a3329be90cf8a8855ea6e7c68ec234
