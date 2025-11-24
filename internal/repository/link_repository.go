@@ -1,32 +1,63 @@
 package repository
 
 import (
-	// 👇 C'est LÀ que ça bloquait. On importe tes modèles correctement.
 	"github.com/axellelanca/urlshortener/internal/models"
 	"gorm.io/gorm"
 )
 
-type LinkRepository struct {
-	DB *gorm.DB
+// LinkRepository définit les méthodes d'accès aux données
+// pour les opérations CRUD sur les liens.
+type LinkRepository interface {
+	CreateLink(link *models.Link) error
+	GetLinkByShortCode(shortCode string) (*models.Link, error)
+	GetAllLinks() ([]models.Link, error)
+	CountClicksByLinkID(linkID uint) (int, error)
 }
 
-// Create : Sauvegarde un lien (Simulation)
-func (r *LinkRepository) Create(link *models.Link) error {
-	return nil
+// GormLinkRepository est l'implémentation de LinkRepository utilisant GORM.
+type GormLinkRepository struct {
+	db *gorm.DB
 }
 
-// FindByShortCode : Cherche un lien (Simulation)
-func (r *LinkRepository) FindByShortCode(code string) (*models.Link, error) {
-	// On renvoie un lien vide pour que ça compile
-	return &models.Link{}, nil
+// NewLinkRepository crée et retourne une nouvelle instance de GormLinkRepository.
+func NewLinkRepository(db *gorm.DB) *GormLinkRepository {
+	return &GormLinkRepository{
+		db: db,
+	}
 }
 
-// IncrementClicks : Compte les clics (Simulation)
-func (r *LinkRepository) IncrementClicks(link *models.Link) error {
-	return nil
+// CreateLink insère un nouveau lien dans la base de données.
+func (r *GormLinkRepository) CreateLink(link *models.Link) error {
+	return r.db.Create(link).Error
 }
 
-// GetAll : Récupère tout (Simulation)
-func (r *LinkRepository) GetAll() ([]models.Link, error) {
-	return []models.Link{}, nil
+// GetLinkByShortCode récupère un lien de la base de données en utilisant son shortCode.
+func (r *GormLinkRepository) GetLinkByShortCode(shortCode string) (*models.Link, error) {
+	var link models.Link
+	if err := r.db.Where("short_code = ?", shortCode).First(&link).Error; err != nil {
+		// Peut être gorm.ErrRecordNotFound, à gérer au niveau appelant
+		return nil, err
+	}
+	return &link, nil
+}
+
+// GetAllLinks récupère tous les liens de la base de données.
+func (r *GormLinkRepository) GetAllLinks() ([]models.Link, error) {
+	var links []models.Link
+	if err := r.db.Find(&links).Error; err != nil {
+		return nil, err
+	}
+	return links, nil
+}
+
+// CountClicksByLinkID compte le nombre total de clics pour un ID de lien donné.
+func (r *GormLinkRepository) CountClicksByLinkID(linkID uint) (int, error) {
+	var count int64
+	if err := r.db.Model(&models.Click{}).
+		Where("link_id = ?", linkID).
+		Count(&count).Error; err != nil {
+		return 0, err
+	}
+
+	return int(count), nil
 }

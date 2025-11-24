@@ -28,10 +28,7 @@ var statsCmd = &cobra.Command{
 }
 
 func init() {
-	// 1. Configuration du drapeau --code (ou -c)
 	statsCmd.Flags().StringVarP(&shortCode, "code", "c", "", "Le code court du lien (ex: XYZ123)")
-	statsCmd.MarkFlagRequired("code") // Obligatoire
-
-	// 2. Enregistrement auprès du Chef (RootCmd)
+	statsCmd.MarkFlagRequired("code") 
 	cmd.RootCmd.AddCommand(statsCmd)
 }

@@ -24,8 +24,6 @@ var migrateCmd = &cobra.Command{
 }
 
 func init() {
-	// Pas de drapeau spécifique pour l'instant.
-	
-	// Enregistrement auprès du Chef (RootCmd)
+
 	cmd.RootCmd.AddCommand(migrateCmd)
 }
