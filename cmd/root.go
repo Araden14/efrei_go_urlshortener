@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/axellelanca/urlshortener/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // Cfg est la variable globale qui contiendra la configuration chargée.
@@ -52,7 +52,7 @@ func initConfig() {
 	// On essaie de charger la config. 
 	// Note: Assure-toi que la fonction LoadConfig existe bien dans internal/config/config.go
 	// et qu'elle ne demande pas d'arguments, ou adapte ici ("." par exemple).
-	Cfg, err = config.LoadConfig(".") 
+	Cfg, err = config.LoadConfig()
 	
 	if err != nil {
 		// On loggue juste l'avertissement comme demandé
