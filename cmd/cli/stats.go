@@ -2,34 +2,37 @@ package cli
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
-
-	// 👇 On importe le paquet cmd pour accéder à RootCmd
-	"github.com/axellelanca/urlshortener/cmd"
 )
 
-var shortCode string // La variable pour stocker le code (ex: XYZ123)
+// Variable pour stocker le code court demandé
+var shortCode string
 
-// statsCmd représente la commande "stats"
-var statsCmd = &cobra.Command{
-	Use:   "stats",
+// StatsCmd définit la commande pour voir les statistiques
+var StatsCmd = &cobra.Command{
+	Use:   "stats", // La commande : ./url-shortener stats
 	Short: "Affiche les statistiques d'un lien",
-	Long:  `Récupère et affiche le nombre de clics pour un code court donné.`,
-	Run: func(c *cobra.Command, args []string) {
-		fmt.Printf("📊 Récupération des statistiques pour le code : %s\n", shortCode)
+	Long:  `Affiche le nombre de clics et les infos pour un code court donné.`,
 
-		// TODO: Appeler le service (Poste 1) : service.GetStats(shortCode)
+	Run: func(cmd *cobra.Command, args []string) {
+		// 1. Vérification que le code est bien là
+		if shortCode == "" {
+			fmt.Println("Erreur : Veuillez fournir un code avec --code")
+			return
+		}
 
-		// Simulation
-		fmt.Println("--- RÉSULTAT (Simulation) ---")
-		fmt.Println("URL d'origine : https://www.efrei.fr")
-		fmt.Println("Nombre de clics : 42")
+		// 2. TEMPORAIRE : Simulation de l'affichage
+		fmt.Printf("Recherche des statistiques pour le code : %s...\n", shortCode)
+		fmt.Println("TODO: Connecter le service pour récupérer les vrais clics plus tard.")
+		
+		// Simulation d'un résultat pour voir si ton affichage est joli
+		fmt.Println("--- RÉSULTAT FICTIF ---")
+		fmt.Printf("Code: %s\n", shortCode)
+		fmt.Println("Nombre de clics: 0 (En attente de la base de données)")
 	},
 }
 
 func init() {
-	statsCmd.Flags().StringVarP(&shortCode, "code", "c", "", "Le code court du lien (ex: XYZ123)")
-	statsCmd.MarkFlagRequired("code")
-	cmd.RootCmd.AddCommand(statsCmd)
+	// On ajoute le drapeau --code (ou -c)
+	StatsCmd.Flags().StringVarP(&shortCode, "code", "c", "", "Le code court (ex: XYZ123)")
 }
