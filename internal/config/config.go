@@ -26,7 +26,7 @@ type Analytics struct {
 }
 
 type Monitor struct {
-	IntervalMinutes int
+	IntervalMinutes int `mapstructure:"interval_minutes"`
 }
 type Config struct {
 	Server
